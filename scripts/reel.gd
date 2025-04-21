@@ -59,7 +59,7 @@ func SpinReel():
 	current_speed = 0.0
 	target_speed = 1000
 
-func HomeReel(target : int):
+func HomeReel(_target : int):
 	continuous_spin = false
 	temp_curve = home_curve
 	
@@ -67,7 +67,7 @@ func HomeReel(target : int):
 	current_speed = 0.0
 	target_speed = 500
 		
-func StopReel(target : int):
+func StopReel(_target : int):
 	continuous_spin = false
 	temp_curve = stop_curve
 	
