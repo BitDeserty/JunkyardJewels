@@ -1,0 +1,20 @@
+[gd_scene load_steps=6 format=3 uid="uid://btjvh56i75lt6"]
+
+[ext_resource type="Texture2D" uid="uid://b7e35vrpuiune" path="res://assets/symbols.png" id="1_fgkov"]
+[ext_resource type="Script" uid="uid://ddwoxxninbeh1" path="res://scripts/reel.gd" id="2_53643"]
+[ext_resource type="Curve" uid="uid://c8bp155v3noob" path="res://resources/start_curve.tres" id="3_kfout"]
+[ext_resource type="Curve" uid="uid://ecg0x4vd06s7" path="res://resources/stop_curve.tres" id="4_cta4m"]
+[ext_resource type="Curve" uid="uid://la7ywj4v5vfc" path="res://resources/home_curve.tres" id="4_hdh5c"]
+
+[node name="Reel" type="Node2D"]
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 3
+texture_repeat = 2
+texture = ExtResource("1_fgkov")
+script = ExtResource("2_53643")
+start_curve = ExtResource("3_kfout")
+stop_curve = ExtResource("4_cta4m")
+home_curve = ExtResource("4_hdh5c")
