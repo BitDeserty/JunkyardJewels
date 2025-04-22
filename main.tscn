@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://cdpt2glc4fool"]
+[gd_scene load_steps=40 format=3 uid="uid://cdpt2glc4fool"]
 
 [ext_resource type="PackedScene" uid="uid://bi4gkg0jvuf40" path="res://reel.tscn" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://s4qypbufbpci" path="res://scripts/cabinet.gd" id="1_h2yge"]
@@ -26,6 +26,7 @@
 [ext_resource type="Script" uid="uid://bc40xx2oq0xq3" path="res://scripts/bank.gd" id="22_ryguw"]
 [ext_resource type="Script" uid="uid://jc11tf8dumtu" path="res://scripts/startup_state.gd" id="23_1u8w0"]
 [ext_resource type="Texture2D" uid="uid://c21cpie2h3cj4" path="res://assets/junkyard_jewels.png" id="24_0odxb"]
+[ext_resource type="Texture2D" uid="uid://ctpru86mv4s1i" path="res://assets/bitdeserty_avatar_small.jpg" id="26_a6jrf"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4c57u"]
 atlas = ExtResource("10_4c57u")
@@ -305,6 +306,15 @@ offset_right = 436.0
 offset_bottom = 236.0
 texture = ExtResource("24_0odxb")
 expand_mode = 2
+
+[node name="StudioSplash" type="TextureRect" parent="FSM/StartupState/TitleSplash"]
+texture_filter = 3
+offset_left = -51.0
+offset_top = 115.0
+offset_right = 182.0
+offset_bottom = 346.0
+scale = Vector2(0.291482, 0.280305)
+texture = ExtResource("26_a6jrf")
 
 [node name="Bank" type="Node" parent="."]
 script = ExtResource("22_ryguw")
