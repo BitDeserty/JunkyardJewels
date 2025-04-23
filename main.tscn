@@ -298,7 +298,6 @@ script = ExtResource("21_getpj")
 script = ExtResource("23_1u8w0")
 
 [node name="TitleSplash" type="TextureRect" parent="FSM/StartupState"]
-visible = false
 texture_filter = 3
 offset_left = 209.0
 offset_top = 122.0
