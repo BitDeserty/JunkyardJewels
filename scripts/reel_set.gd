@@ -29,9 +29,23 @@ func HomeReels(reel1 : int, reel2 : int, reel3 : int):
 	emit_signal("_reels_homed")
 	
 func StopReels(reel1 : int, reel2 : int, reel3 : int):
+	$Reel1.get_node("Sprite2D").connect("_finished", Callable(self, "_on_reel_stop"))
+	$Reel2.get_node("Sprite2D").connect("_finished", Callable(self, "_on_reel_stop"))
+	$Reel3.get_node("Sprite2D").connect("_finished", Callable(self, "_on_reel_stop"))
+	
 	$Reel1.get_node("Sprite2D").StopReel(reel1)
 	await get_tree().create_timer(1).timeout
+	
 	$Reel2.get_node("Sprite2D").StopReel(reel2)
-	await get_tree().create_timer(2.5).timeout
+	await get_tree().create_timer(1).timeout
+	
 	$Reel3.get_node("Sprite2D").StopReel(reel3)
+	await $Reel3.get_node("Sprite2D")._finished
 	emit_signal("_reels_stopped")
+	
+	$Reel1.get_node("Sprite2D").disconnect("_finished", Callable(self, "_on_reel_stop"))
+	$Reel2.get_node("Sprite2D").disconnect("_finished", Callable(self, "_on_reel_stop"))
+	$Reel3.get_node("Sprite2D").disconnect("_finished", Callable(self, "_on_reel_stop"))
+
+func _on_reel_stop():
+	$"../SlotGame/Camera2D".add_trauma(5)

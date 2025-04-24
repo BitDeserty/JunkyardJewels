@@ -53,3 +53,4 @@ func fade_out() -> void:
 		# Start the fade animation using the tween
 		var tween = get_tree().create_tween()
 		tween.tween_property($TitleSplash, "modulate:a", 0.0, fade_duration)
+		tween.tween_callback(($TitleSplash.set_visible.bind(false)))

@@ -19,11 +19,11 @@
 [ext_resource type="Script" uid="uid://ccmcktr47q21j" path="res://scripts/idle_state.gd" id="16_yaehf"]
 [ext_resource type="Script" uid="uid://dwj8qr601w4e6" path="res://scripts/playing_state.gd" id="17_yaehf"]
 [ext_resource type="Script" uid="uid://bmtp58ej75kns" path="res://scripts/bet_increment_state.gd" id="18_074og"]
-[ext_resource type="Texture2D" uid="uid://c6cpxcdfjanjm" path="res://assets/insertmoney.png" id="18_lswn8"]
+[ext_resource type="SpriteFrames" uid="uid://cx2qo4t7grdfd" path="res://resources/insertbill.tres" id="18_a6jrf"]
 [ext_resource type="Script" uid="uid://bc7hko7dqip7u" path="res://scripts/bill_insert_state.gd" id="19_cegan"]
 [ext_resource type="Script" uid="uid://cb0k0a384l2p4" path="res://scripts/bonus_state.gd" id="20_82xsv"]
 [ext_resource type="Script" uid="uid://cn8yl7eyehave" path="res://scripts/payout_state.gd" id="21_getpj"]
-[ext_resource type="Script" uid="uid://bc40xx2oq0xq3" path="res://scripts/bank.gd" id="22_ryguw"]
+[ext_resource type="Script" uid="uid://bc40xx2oq0xq3" path="res://scripts/Bank.gd" id="22_ryguw"]
 [ext_resource type="Script" uid="uid://jc11tf8dumtu" path="res://scripts/startup_state.gd" id="23_1u8w0"]
 [ext_resource type="Texture2D" uid="uid://c21cpie2h3cj4" path="res://assets/junkyard_jewels.png" id="24_0odxb"]
 [ext_resource type="Texture2D" uid="uid://ctpru86mv4s1i" path="res://assets/bitdeserty_avatar_small.jpg" id="26_a6jrf"]
@@ -269,15 +269,15 @@ initial_state = NodePath("StartupState")
 [node name="IdleState" type="Node" parent="FSM"]
 script = ExtResource("16_yaehf")
 
-[node name="InsertBillTip" type="TextureRect" parent="FSM/IdleState"]
+[node name="InsertBillTip" type="AnimatedSprite2D" parent="FSM/IdleState"]
 visible = false
 z_index = 1
 texture_filter = 3
-offset_left = 302.0
-offset_top = 231.0
-offset_right = 403.0
-offset_bottom = 309.0
-texture = ExtResource("18_lswn8")
+position = Vector2(340, 277)
+sprite_frames = ExtResource("18_a6jrf")
+animation = &"billblink"
+autoplay = "billblink"
+frame_progress = 0.298954
 
 [node name="PlayingState" type="Node" parent="FSM"]
 script = ExtResource("17_yaehf")
@@ -308,6 +308,7 @@ expand_mode = 2
 
 [node name="StudioSplash" type="TextureRect" parent="FSM/StartupState/TitleSplash"]
 texture_filter = 3
+layout_mode = 0
 offset_left = -51.0
 offset_top = 115.0
 offset_right = 182.0
@@ -317,6 +318,8 @@ texture = ExtResource("26_a6jrf")
 
 [node name="Bank" type="Node" parent="."]
 script = ExtResource("22_ryguw")
+
+[node name="Backend" type="Node" parent="."]
 
 [connection signal="pressed" from="Buttons/PaytableButton/PaytableButton" to="." method="_on_paytable_button_released"]
 [connection signal="pressed" from="Buttons/BackToGameButton/BackToGameButton" to="." method="_on_back_to_game_button_released"]

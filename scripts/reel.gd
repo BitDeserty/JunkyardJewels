@@ -1,5 +1,7 @@
 extends Sprite2D
 
+var camera : Camera2D
+
 var target_speed: float = 0.0 # Adjust this for faster or slower scrolling
 var current_speed : float = 0.0
 
@@ -73,7 +75,7 @@ func StopReel(_target : int):
 	
 	timer.start(temp_curve.max_domain)
 	current_speed = current_speed
-	target_speed = 0
+	target_speed = 1000
 	
 func UpdateReel(delta):
 	#if (curving_to_target):
@@ -110,4 +112,6 @@ func CalculateStopPosition(pos : int) -> int:
 	return retval
 
 func _on_timeout():
-	emit_signal("_finished")
+	if !continuous_spin:
+		print("Reel stopped")
+		emit_signal("_finished")

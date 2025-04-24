@@ -1,0 +1,39 @@
+[gd_resource type="SpriteFrames" load_steps=6 format=3 uid="uid://cx2qo4t7grdfd"]
+
+[ext_resource type="Texture2D" uid="uid://c6cpxcdfjanjm" path="res://assets/insertmoney.png" id="1_dj8ek"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8nxg3"]
+atlas = ExtResource("1_dj8ek")
+region = Rect2(0, 0, 82, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xwhn7"]
+atlas = ExtResource("1_dj8ek")
+region = Rect2(0, 62, 82, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_03hqp"]
+atlas = ExtResource("1_dj8ek")
+region = Rect2(0, 124, 82, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_js786"]
+atlas = ExtResource("1_dj8ek")
+region = Rect2(0, 186, 82, 62)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8nxg3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xwhn7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_03hqp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_js786")
+}],
+"loop": true,
+"name": &"billblink",
+"speed": 5.0
+}]
