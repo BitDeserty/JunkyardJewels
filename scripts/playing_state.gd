@@ -2,29 +2,38 @@ extends State
 class_name PlayingState
 
 @onready var bank_instance = $"../../Bank" as Bank
+@onready var backend = $"../../Backend" as Backend
+
+signal _playrequest(PlayResult)
 
 func Enter():
 	print("Entering Playing State")
 	
 	# Disable the button deck
 	$"../../Buttons/BetButton/BetButton".disabled = true
-	#$"../../Buttons/SpinButton/SpinButton".disabled = true
+	$"../../Buttons/SpinButton/SpinButton".disabled = true
 	$"../../Buttons/BillInsert/BillInsertButton".disabled = true
 	
-	$"../../Buttons/SpinButton/SpinButton".connect("pressed", Callable(self, "_on_spin_button_pressed"))
+	#$"../../Buttons/SpinButton/SpinButton".connect("pressed", Callable(self, "_on_spin_button_pressed"))
 	#$"../../Buttons/BillInsert/BillInsertButton".connect("pressed", Callable(self, "_on_bill_insert_button_pressed"))
 	#$"../../Buttons/BetButton/BetButton".connect("pressed", Callable(self, "_on_bet_button_pressed"))
 	
+	backend.connect("_playresponse", Callable(self, "_on_playresponse"))
 	
 	# Start the reels spinning
 	$"../../ReelSet".SpinReels()
 	
 	# Request a play from the RNG
-	#	Fire a PlayRequest(betamt) event
+	# Build the request
+	var playreq = PlayResult.new(bank_instance.GetBet())
+	
+	# Send a PlayRequest(betamt) 
+	print("Sending a PlayRequest ->")
+	emit_signal("_playrequest", playreq)
 	
 func Update(_delta : float):
-	await($"../../ReelSet"._reels_started)
-	# Wait for PlayResponse(PlayResult)
+	pass
+	
 	
 func Exit():
 	# Enable the button deck
@@ -32,23 +41,33 @@ func Exit():
 	$"../../Buttons/SpinButton/SpinButton".disabled = false
 	$"../../Buttons/BillInsert/BillInsertButton".disabled = false
 	
-	$"../../Buttons/SpinButton/SpinButton".disconnect("pressed", Callable(self, "_on_spin_button_pressed"))
+	#$"../../Buttons/SpinButton/SpinButton".disconnect("pressed", Callable(self, "_on_spin_button_pressed"))
 	#$"../../Buttons/BillInsert/BillInsertButton".disconnect("pressed", Callable(self, "_on_bill_insert_button_pressed"))
 	#$"../../Buttons/BetButton/BetButton".disconnect("pressed", Callable(self, "_on_bet_button_pressed"))
 
+	backend.disconnect("_playresponse", Callable(self, "_on_playresponse"))
 
 # Respond to a PlayResponse(PlayResult)
-func _on_playresponse():
-	pass
+func _on_playresponse(PlayResult):
 	# Set the reel targets
+	print("PlayResponse received! Stopping reels at 6.6.6")
+	
 	# Call SpinToTargets(targets)
+	$"../../ReelSet".StopReels(6, 6, 6)
+	
+	# Wait for the reels to stop
+	await($"../../ReelSet"._reels_stopped)
 	
 	# If there is a bonus presentation, go to the BonusState
+	if PlayResult.bonus_amount:
+		$"..".change_state(self, "BonusState")
 	
 	# If there is a win, go to the PayoutState
 	
 	# Else, go back to IdleState
+	$"..".change_state(self, "IdleState")
 
+#region Spin Button press in the Playing State. Basically a 2-touch (start/stop spin). Used for testing currently
 func _on_spin_button_pressed():
 	# Set the reel targets
 	
@@ -57,7 +76,7 @@ func _on_spin_button_pressed():
 	
 	# Command to stop the reels at the specified targets
 	$"../../ReelSet".StopReels(6, 12, 16)
-	print("Stopping at 6 12 16")
+	print("Manual stop received! Stopping at 6 12 16")
 	
 	# Wait for the reels to stop
 	await($"../../ReelSet"._reels_stopped)
@@ -68,3 +87,4 @@ func _on_spin_button_pressed():
 	
 	# Else, go back to IdleState
 	$"..".change_state(self, "IdleState")
+#endregion
