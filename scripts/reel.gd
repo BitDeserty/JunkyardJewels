@@ -18,19 +18,23 @@ var continuous_spin : bool
 const NUMBER_OF_SYMBOLS : int = 24
 const SYMBOL_SIZE : int = 32
 const STRIP_HEIGHT : int = NUMBER_OF_SYMBOLS * SYMBOL_SIZE
+const FULL_SPEED : int = 1000
 
 var timer : Timer
 
 var shader_material : ShaderMaterial
+var target_position : int
+var target_symbol : int
 
 signal _finished
 
 func set_shader_strength(value: float):
 	shader_material.set_shader_parameter("strength", value)
 
+# Used by external
 func set_reel_speed(value: float):
 	target_speed = value
-	set_shader_strength( value / 1000 )
+	set_shader_strength( value / FULL_SPEED )
 
 func _ready():
 	# Check reel art matches code constants
@@ -59,52 +63,59 @@ func SpinReel():
 	
 	timer.start(temp_curve.max_domain)
 	current_speed = 0.0
-	target_speed = 1000
+	target_speed = FULL_SPEED
 
-func HomeReel(_target : int):
+func HomeReel(target : int):
 	continuous_spin = false
 	temp_curve = home_curve
 	
+	# Calculate the target position to stop at (target * SYMBOL_SIZE)
+	target_position = CalculateStopPosition(target)
+	target_symbol = target
+	
 	timer.start(temp_curve.max_domain)
-	current_speed = 0.0
-	target_speed = 500
+	current_speed = 500
+	target_speed = 0
 		
-func StopReel(_target : int):
+func StopReel(target : int):
 	continuous_spin = false
 	temp_curve = stop_curve
 	
+	# Calculate the target position to stop at (target * SYMBOL_SIZE)
+	target_position = CalculateStopPosition(target)
+	target_symbol = target
+	
 	timer.start(temp_curve.max_domain)
 	current_speed = current_speed
-	target_speed = 1000
+	target_speed = 0
+	yoffset = 0
 	
 func UpdateReel(delta):
 	#if (curving_to_target):
 	if timer.time_left > 0.0:
 		# Use the curve to determine the speed based on normalized time (0 to 1)
 		var ramp_duration = temp_curve.max_domain
-		var curve_value = temp_curve.sample( ramp_duration - timer.time_left)
+		var time_left = timer.time_left
+		var curve_value = temp_curve.sample( ramp_duration - time_left)
 		
 		# Calculate the current speed based on the curve value
-		current_speed = curve_value * target_speed  # Apply the max speed based on curve value
+		current_speed = int(curve_value * FULL_SPEED)  # Apply the max speed based on curve value
 	else:
-		if continuous_spin:
-			current_speed = target_speed
-		else:
-			current_speed = 0
-			target_speed = 0
+		current_speed = int(target_speed)
 
 	# Increase the offset to create the spinning effect
 	yoffset += current_speed * delta
-			
+	
+	# If going past the end, wrap the texture vertically to create a seamless loop
+	if yoffset > texture.get_height() - (SYMBOL_SIZE * 2):
+		yoffset = 0.0
+	elif yoffset < 0.0:
+		yoffset = texture.get_height() - (SYMBOL_SIZE * 2)
+
 	# Apply the vertical offset to the texture
 	offset = Vector2(0, yoffset)
 	
-	# Optionally, wrap the texture vertically to create a seamless loop
-	if yoffset > texture.get_height() - 64:
-		yoffset = 0.0  # Reset offset once it exceeds the texture height
-	#else:
-		#target_speed = 0
-	set_shader_strength(current_speed / 1000)
+	set_shader_strength(current_speed / FULL_SPEED)
 
 
 func CalculateStopPosition(pos : int) -> int:
@@ -113,5 +124,22 @@ func CalculateStopPosition(pos : int) -> int:
 
 func _on_timeout():
 	if !continuous_spin:
-		print("Reel stopped")
+		# Check if we have reached the target position
+		if yoffset < target_position:
+			print("oops, missed the target, end position %d, target is %d" % [yoffset, target_position]  )
+			#var tween = get_tree().create_tween()
+			#tween.tween_property(self, "offset", Vector2(0,yoffset), target_position)
+			print("After skooch %d" % offset.y)
+			
+		if target_position:
+			if yoffset >= target_position:
+				yoffset = target_position  # Ensure we stop exactly at the target position
+			print("Reel stopped at position %d, target is %d" % [yoffset, target_position]  )
+			
+		else:
+			print("Reel stopped wherever")
+		
+		emit_signal("_finished")
+	else:
+		print("Reel spun up!")
 		emit_signal("_finished")

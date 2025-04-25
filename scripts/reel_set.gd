@@ -19,6 +19,7 @@ func SpinReels():
 	$Reel3.get_node("Sprite2D").SpinReel()
 	await $Reel3.get_node("Sprite2D")._finished
 	emit_signal("_reels_started")
+	return true
 
 func HomeReels(reel1 : int, reel2 : int, reel3 : int):
 	print("Homing Reels")

@@ -183,6 +183,7 @@ texture_normal = ExtResource("8_kek77")
 [node name="BackToGameButton" type="Node" parent="Buttons"]
 
 [node name="BackToGameButton" type="TextureButton" parent="Buttons/BackToGameButton"]
+visible = false
 texture_filter = 3
 offset_left = 149.0
 offset_top = 45.0

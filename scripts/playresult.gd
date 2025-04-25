@@ -10,5 +10,5 @@ var payout_factor : int
 var bonus_amount : int
 
 # Constructor to initialize PlayResult
-func _init(bet_amount: int):
-	self.bet_amount = bet_amount
+func _init(betamt: int):
+	self.bet_amount = betamt

@@ -1,7 +1,7 @@
 extends Node
 class_name Bank
 
-var balance : int
+var balance : int = 0
 var betamt : int = 1
 var winmeter : int = 0
 

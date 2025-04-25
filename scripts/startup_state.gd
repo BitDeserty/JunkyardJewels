@@ -2,7 +2,6 @@ extends State
 class_name StartupState
 
 @onready var bank_instance = $"../../Bank" as Bank
-var tween : Tween
 @export var fade_duration : float = 1.0    # Duration for the fade out
 
 func Enter():
@@ -21,7 +20,7 @@ func Enter():
 	$"../../ReelSet".connect("_reels_homed", Callable(self, "_on_reels_homed"))
 	
 	# Start the reels spinning
-	$"../../ReelSet".HomeReels(6, 12, 18)
+	$"../../ReelSet".HomeReels(12, 12, 12)
 	$TitleSplash.visible = true
 	
 
