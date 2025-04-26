@@ -14,7 +14,7 @@ func _ready():
 	randomize()
 	
 	# Connect the game platform to the backend
-	$"../FSM/PlayingState".connect("_playrequest", on_PlayRequest)
+	$"../GameManager/PlayingState".connect("_playrequest", on_PlayRequest)
 	
 	paytable = [0, 1, 0, 2, 10, 0, 1, 0, 2, 50, 0, 1, 0, 2, 10, 0] # 16 possible outcomes
 

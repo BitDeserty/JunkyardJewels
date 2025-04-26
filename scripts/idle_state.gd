@@ -4,7 +4,7 @@ class_name IdleState
 @onready var bank_instance = $"../../Bank" as Bank
 
 func Enter():
-	print("Entering Idle State")
+	print("*Entering Game Idle State")
 	# Enable the button deck
 	$"../../Buttons/BetButton/BetButton".disabled = false	
 	$"../../Buttons/SpinButton/SpinButton".disabled = false
@@ -45,3 +45,10 @@ func _on_bill_insert_button_pressed() -> void:
 	if $InsertBillTip.visible:
 		$InsertBillTip.visible = false
 	$"..".change_state(self, "BillInsertState")
+	
+	
+func _on_paytable_button_released() -> void:
+	$"../../SlotGame/Camera2D".view_paytable()
+	$"../../Buttons/PaytableButton/PaytableButton".visible = false
+	$"../../Buttons/BackToGameButton/BackToGameButton".visible = true
+	

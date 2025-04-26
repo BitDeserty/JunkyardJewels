@@ -5,7 +5,7 @@ class_name StartupState
 @export var fade_duration : float = 1.0    # Duration for the fade out
 
 func Enter():
-	print("Entering Startup State")
+	print("*Entering Game Startup State")
 	
 	# Disable the button deck
 	$"../../Buttons/BetButton/BetButton".disabled = true
@@ -19,13 +19,11 @@ func Enter():
 	# Listen for reels homed signal
 	$"../../ReelSet".connect("_reels_homed", Callable(self, "_on_reels_homed"))
 	
-	# Start the reels spinning
-	$"../../ReelSet".HomeReels(12, 12, 12)
 	$TitleSplash.visible = true
 	
 
 func Update(_delta : float):
-	await($"../../ReelSet"._reels_homed)
+	pass
 
 func Exit():
 	# Enable the button deck
@@ -40,7 +38,6 @@ func Exit():
 	$"../../ReelSet".disconnect("_reels_homed", Callable(self, "_on_reels_homed"))
 
 func _on_reels_homed():
-	#$TitleSplash.visible = false
 	fade_out()
 	$"../IdleState/InsertBillTip".visible = true
 	$"..".change_state(self, "IdleState")
@@ -52,4 +49,6 @@ func fade_out() -> void:
 		# Start the fade animation using the tween
 		var tween = get_tree().create_tween()
 		tween.tween_property($TitleSplash, "modulate:a", 0.0, fade_duration)
+		
+		# Set visible to false when the tween is done
 		tween.tween_callback(($TitleSplash.set_visible.bind(false)))

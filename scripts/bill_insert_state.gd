@@ -4,7 +4,7 @@ class_name BillInsertState
 @onready var bank_instance = $"../../Bank" as Bank
 
 func Enter():
-	print("Entering Bill Insert State")
+	print("*Entering Game Bill Insert State")
 	# Disable the button deck
 	$"../../Buttons/BetButton/BetButton".disabled = true
 	$"../../Buttons/SpinButton/SpinButton".disabled = true

@@ -1,18 +1,46 @@
-[gd_scene load_steps=6 format=3 uid="uid://bi4gkg0jvuf40"]
+[gd_scene load_steps=13 format=3 uid="uid://bi4gkg0jvuf40"]
 
 [ext_resource type="Texture2D" uid="uid://cgj2i3ecehiba" path="res://assets/symbols.png" id="1_fgkov"]
-[ext_resource type="Script" uid="uid://ddwoxxninbeh1" path="res://scripts/reel.gd" id="2_53643"]
+[ext_resource type="Script" uid="uid://cujy7ctnfpark" path="res://scripts/ReelStateMachine/reelstatemachine.gd" id="1_y2lq7"]
+[ext_resource type="Script" uid="uid://ddwoxxninbeh1" path="res://scripts/reelstrip.gd" id="2_53643"]
 [ext_resource type="Curve" uid="uid://c8bp155v3noob" path="res://resources/start_curve.tres" id="3_kfout"]
 [ext_resource type="Curve" uid="uid://ecg0x4vd06s7" path="res://resources/stop_curve.tres" id="4_cta4m"]
 [ext_resource type="Curve" uid="uid://la7ywj4v5vfc" path="res://resources/home_curve.tres" id="4_hdh5c"]
+[ext_resource type="Script" uid="uid://13yv4fn4mrme" path="res://scripts/ReelStateMachine/reel_idle_state.gd" id="7_tcjkb"]
+[ext_resource type="Script" uid="uid://w1012djyxpx6" path="res://scripts/ReelStateMachine/reel_homing_state.gd" id="7_y2lq7"]
+[ext_resource type="Script" uid="uid://by5d6mcmohb0o" path="res://scripts/ReelStateMachine/reel_spin_start_state.gd" id="8_xouo5"]
+[ext_resource type="Script" uid="uid://cnan8hp1pblue" path="res://scripts/ReelStateMachine/reel_spinning_state.gd" id="9_f6lew"]
+[ext_resource type="Script" uid="uid://cr6ioe8kx3acc" path="res://scripts/ReelStateMachine/reel_spin_seek_state.gd" id="10_ajtl2"]
+[ext_resource type="Script" uid="uid://bigusrx837f4k" path="res://scripts/ReelStateMachine/reel_spin_stop_state.gd" id="11_w60mv"]
 
-[node name="Reel" type="Node2D"]
+[node name="Reel" type="Node2D" node_paths=PackedStringArray("initial_state")]
+script = ExtResource("1_y2lq7")
+initial_state = NodePath("ReelHomingState")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="ReelStrip" type="Sprite2D" parent="."]
 texture_filter = 3
 texture_repeat = 2
+position = Vector2(0, -384)
 texture = ExtResource("1_fgkov")
 script = ExtResource("2_53643")
-start_curve = ExtResource("3_kfout")
-stop_curve = ExtResource("4_cta4m")
+
+[node name="ReelHomingState" type="Node" parent="."]
+script = ExtResource("7_y2lq7")
 home_curve = ExtResource("4_hdh5c")
+
+[node name="ReelIdleState" type="Node" parent="."]
+script = ExtResource("7_tcjkb")
+
+[node name="ReelSpinStartState" type="Node" parent="."]
+script = ExtResource("8_xouo5")
+start_curve = ExtResource("3_kfout")
+
+[node name="ReelSpinningState" type="Node" parent="."]
+script = ExtResource("9_f6lew")
+
+[node name="ReelSpinSeekState" type="Node" parent="."]
+script = ExtResource("10_ajtl2")
+
+[node name="ReelSpinStopState" type="Node" parent="."]
+script = ExtResource("11_w60mv")
+stop_curve = ExtResource("4_cta4m")

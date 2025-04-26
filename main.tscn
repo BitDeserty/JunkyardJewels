@@ -23,7 +23,7 @@
 [ext_resource type="Script" uid="uid://bc7hko7dqip7u" path="res://scripts/bill_insert_state.gd" id="19_cegan"]
 [ext_resource type="Script" uid="uid://cb0k0a384l2p4" path="res://scripts/bonus_state.gd" id="20_82xsv"]
 [ext_resource type="Script" uid="uid://cn8yl7eyehave" path="res://scripts/payout_state.gd" id="21_getpj"]
-[ext_resource type="Script" uid="uid://bc40xx2oq0xq3" path="res://scripts/Bank.gd" id="22_ryguw"]
+[ext_resource type="Script" uid="uid://bc40xx2oq0xq3" path="res://scripts/bank.gd" id="22_ryguw"]
 [ext_resource type="Script" uid="uid://jc11tf8dumtu" path="res://scripts/startup_state.gd" id="23_1u8w0"]
 [ext_resource type="Texture2D" uid="uid://c21cpie2h3cj4" path="res://assets/junkyard_jewels.png" id="24_0odxb"]
 [ext_resource type="Texture2D" uid="uid://ctpru86mv4s1i" path="res://assets/bitdeserty_avatar_small.jpg" id="26_a6jrf"]
@@ -120,17 +120,73 @@ animations = [{
 [node name="Cabinet" type="Node2D"]
 script = ExtResource("1_h2yge")
 
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("15_2cqfq")
+initial_state = NodePath("StartupState")
+
+[node name="IdleState" type="Node" parent="GameManager"]
+script = ExtResource("16_yaehf")
+
+[node name="InsertBillTip" type="AnimatedSprite2D" parent="GameManager/IdleState"]
+visible = false
+z_index = 1
+texture_filter = 3
+position = Vector2(340, 277)
+sprite_frames = ExtResource("18_a6jrf")
+animation = &"billblink"
+autoplay = "billblink"
+frame_progress = 0.298954
+
+[node name="PlayingState" type="Node" parent="GameManager"]
+script = ExtResource("17_yaehf")
+
+[node name="BetIncrementState" type="Node" parent="GameManager"]
+script = ExtResource("18_074og")
+
+[node name="BillInsertState" type="Node" parent="GameManager"]
+script = ExtResource("19_cegan")
+
+[node name="BonusState" type="Node" parent="GameManager"]
+script = ExtResource("20_82xsv")
+
+[node name="PayoutState" type="Node" parent="GameManager"]
+script = ExtResource("21_getpj")
+
+[node name="StartupState" type="Node" parent="GameManager"]
+script = ExtResource("23_1u8w0")
+
+[node name="TitleSplash" type="TextureRect" parent="GameManager/StartupState"]
+visible = false
+z_index = 1
+texture_filter = 3
+offset_left = 209.0
+offset_top = 122.0
+offset_right = 436.0
+offset_bottom = 236.0
+texture = ExtResource("24_0odxb")
+expand_mode = 2
+
+[node name="StudioSplash" type="TextureRect" parent="GameManager/StartupState/TitleSplash"]
+texture_filter = 3
+layout_mode = 0
+offset_left = -51.0
+offset_top = 115.0
+offset_right = 182.0
+offset_bottom = 346.0
+scale = Vector2(0.291482, 0.280305)
+texture = ExtResource("26_a6jrf")
+
 [node name="ReelSet" type="Node" parent="."]
 script = ExtResource("2_d13ii")
 
 [node name="Reel1" parent="ReelSet" instance=ExtResource("1_0xm2m")]
-position = Vector2(271, -155)
+position = Vector2(271, 229)
 
 [node name="Reel2" parent="ReelSet" instance=ExtResource("1_0xm2m")]
-position = Vector2(321, -155)
+position = Vector2(321, 229)
 
 [node name="Reel3" parent="ReelSet" instance=ExtResource("1_0xm2m")]
-position = Vector2(371, -155)
+position = Vector2(371, 229)
 
 [node name="SlotGame" type="Node" parent="."]
 
@@ -173,6 +229,7 @@ texture_pressed = ExtResource("7_5vw27")
 
 [node name="PaytableButton" type="TextureButton" parent="Buttons/PaytableButton"]
 visible = false
+z_index = 1
 texture_filter = 3
 offset_left = 152.0
 offset_top = 119.0
@@ -264,66 +321,12 @@ drag_and_drop_selection_enabled = false
 visible_characters_behavior = 4
 script = ExtResource("13_w48qg")
 
-[node name="FSM" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
-script = ExtResource("15_2cqfq")
-initial_state = NodePath("StartupState")
-
-[node name="IdleState" type="Node" parent="FSM"]
-script = ExtResource("16_yaehf")
-
-[node name="InsertBillTip" type="AnimatedSprite2D" parent="FSM/IdleState"]
-visible = false
-z_index = 1
-texture_filter = 3
-position = Vector2(340, 277)
-sprite_frames = ExtResource("18_a6jrf")
-animation = &"billblink"
-autoplay = "billblink"
-frame_progress = 0.298954
-
-[node name="PlayingState" type="Node" parent="FSM"]
-script = ExtResource("17_yaehf")
-
-[node name="BetIncrementState" type="Node" parent="FSM"]
-script = ExtResource("18_074og")
-
-[node name="BillInsertState" type="Node" parent="FSM"]
-script = ExtResource("19_cegan")
-
-[node name="BonusState" type="Node" parent="FSM"]
-script = ExtResource("20_82xsv")
-
-[node name="PayoutState" type="Node" parent="FSM"]
-script = ExtResource("21_getpj")
-
-[node name="StartupState" type="Node" parent="FSM"]
-script = ExtResource("23_1u8w0")
-
-[node name="TitleSplash" type="TextureRect" parent="FSM/StartupState"]
-texture_filter = 3
-offset_left = 209.0
-offset_top = 122.0
-offset_right = 436.0
-offset_bottom = 236.0
-texture = ExtResource("24_0odxb")
-expand_mode = 2
-
-[node name="StudioSplash" type="TextureRect" parent="FSM/StartupState/TitleSplash"]
-texture_filter = 3
-layout_mode = 0
-offset_left = -51.0
-offset_top = 115.0
-offset_right = 182.0
-offset_bottom = 346.0
-scale = Vector2(0.291482, 0.280305)
-texture = ExtResource("26_a6jrf")
-
 [node name="Bank" type="Node" parent="."]
 script = ExtResource("22_ryguw")
 
 [node name="Backend" type="Node" parent="."]
 script = ExtResource("28_xuqvo")
 
-[connection signal="pressed" from="Buttons/PaytableButton/PaytableButton" to="." method="_on_paytable_button_released"]
+[connection signal="pressed" from="Buttons/PaytableButton/PaytableButton" to="GameManager/IdleState" method="_on_paytable_button_released"]
 [connection signal="pressed" from="Buttons/BackToGameButton/BackToGameButton" to="." method="_on_back_to_game_button_released"]
-[connection signal="animation_finished" from="Buttons/BillInsert/BillInsert" to="FSM/BillInsertState" method="_on_bill_insert_animation_finished"]
+[connection signal="animation_finished" from="Buttons/BillInsert/BillInsert" to="GameManager/BillInsertState" method="_on_bill_insert_animation_finished"]
