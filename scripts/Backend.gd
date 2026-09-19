@@ -5,10 +5,19 @@ signal _playresponse(PlayResult)
 
 const REEL_STRIP_PATH : String = "res://resources/reel_strip.tres"
 const PAYTABLE_PATH : String = "res://resources/paytable.tres"
+const PRIZE_TABLE_PATH : String = "res://resources/bingo_prizes.tres"
 
-# Who decides the prize. Swapping this one line for BingoOutcomeSource is the whole
-# of Milestone 3 as far as the rest of the game is concerned.
+## Clear this to run on the flat RNG stub instead of the bingo ball call server.
+@export var use_bingo_engine : bool = true
+
+# Who decides the prize.
 var outcome_source : OutcomeSource
+
+# The ball call server and the channel the game reaches it through. Swapping
+# LocalTransport for BroadcastTransport is what moves the server into its own window.
+var prize_table : PatternPrizeTable
+var ball_server : BallCallServer
+var transport : BallCallTransport
 
 # Who turns a decided prize into something the reels can show.
 var strip_data : ReelStripData
@@ -16,14 +25,15 @@ var paytable : PaytableData
 var evaluator : CombinationEvaluator
 var mapper : OutcomeMapper
 
+var _pending : PlayResult
+
 
 func _ready():
 	# Randomize the RNG
 	randomize()
 
 	_LoadPresentationData()
-
-	outcome_source = StubRngOutcomeSource.new()
+	_CreateOutcomeSource()
 
 	mapper = OutcomeMapper.new()
 	mapper.BuildIndex(strip_data, evaluator)
@@ -31,15 +41,30 @@ func _ready():
 
 	# Connect the game platform to the backend
 	$"../GameManager/PlayingState".connect("_playrequest", on_PlayRequest)
+	outcome_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
+	outcome_source.Start()
 
 	if "--selftest" in OS.get_cmdline_user_args():
 		RunSelfTest()
 
 
+# A play is now a round trip: park the request and finish when the outcome lands.
 func on_PlayRequest(playdata : PlayResult):
-	# Ask the outcome source what was won. Nothing below this line knows or cares
-	# whether that came from an RNG or a bingo card.
-	var outcome := outcome_source.DrawOutcome(playdata.bet_amount)
+	if _pending != null:
+		push_error("A play request arrived while spin data was still pending.")
+		return
+
+	_pending = playdata
+	print("Requesting an outcome from %s" % outcome_source.Describe())
+	outcome_source.RequestOutcome(playdata.bet_amount)
+
+
+func _on_outcome_ready(outcome : Outcome):
+	var playdata := _pending
+	_pending = null
+	if playdata == null:
+		push_warning("Received an outcome with no play request waiting on it.")
+		return
 
 	playdata.prize_id = outcome.prize_id
 	playdata.payout_factor = outcome.payout_factor
@@ -75,6 +100,24 @@ func _LoadPresentationData() -> void:
 	evaluator = CombinationEvaluator.new(strip_data, paytable)
 
 
+func _CreateOutcomeSource() -> void:
+	if not use_bingo_engine:
+		outcome_source = StubRngOutcomeSource.new()
+		return
+
+	prize_table = load(PRIZE_TABLE_PATH) as PatternPrizeTable
+	assert(prize_table != null and prize_table.IsValid(),
+		"Could not load a valid bingo prize table from %s" % PRIZE_TABLE_PATH)
+
+	ball_server = BallCallServer.new()
+	ball_server.name = "BallCallServer"
+	add_child(ball_server)
+	ball_server.Configure(prize_table)
+
+	transport = LocalTransport.new(ball_server)
+	outcome_source = BingoOutcomeSource.new(transport, prize_table)
+
+
 # The reels have to be able to SHOW every prize the source can award. If they can't,
 # fail here at startup rather than hanging a reel on a target that doesn't exist.
 func _AssertPrizeCoverage() -> void:
@@ -91,6 +134,7 @@ func _AssertPrizeCoverage() -> void:
 # Run with: godot --headless --path <project> -- --selftest
 func RunSelfTest() -> void:
 	print("\n=== Backend self-test ===")
+	print("Outcome source: %s" % outcome_source.Describe())
 	print("Strip: %d stops, payline_offset %d, reversed %s"
 		% [strip_data.StopCount(), strip_data.payline_offset, strip_data.payline_reversed])
 
@@ -122,5 +166,43 @@ func RunSelfTest() -> void:
 			checked += 1
 	print("Verified %d mapped presentations price back to their prize." % checked)
 
+	if prize_table != null:
+		_SelfTestBingo()
+
 	print("=== Backend self-test passed ===\n")
 	get_tree().quit()
+
+
+# Simulates the bingo game directly rather than through the transport, so the prize
+# distribution and the resulting RTP are visible without waiting on message traffic.
+func _SelfTestBingo() -> void:
+	print("\n--- Bingo ball call ---")
+	print("Ball budget: %d of %d" % [prize_table.ball_budget, BallCaller.BALL_COUNT])
+	for prize in prize_table.prizes:
+		print("  pattern: %s" % prize.Describe())
+
+	var games := 20000
+	var distributor := CardDistributor.new()
+	var caller := BallCaller.new()
+	var card_evaluator := CardEvaluator.new(prize_table)
+
+	var counts : Dictionary = {}
+	var total_factor := 0
+
+	for _i in games:
+		var card := distributor.Deal()
+		var called := caller.CallSequence(prize_table.ball_budget)
+		var result := card_evaluator.Evaluate(card, called)
+
+		var key : String = result.pattern_id if result.IsWin() else "(no pattern)"
+		counts[key] = counts.get(key, 0) + 1
+		total_factor += result.payout_factor
+
+	for key in counts:
+		print("  %-16s %6.2f%% of games" % [key, 100.0 * counts[key] / games])
+	print("Simulated RTP over %d games: %.1f%%" % [games, 100.0 * total_factor / games])
+
+	# Same coverage invariant as the reels, checked against the prize table directly.
+	for factor in prize_table.PayableFactors():
+		assert(mapper.HasFactor(factor),
+			"Bingo can award %dx but no reel combination displays it." % factor)

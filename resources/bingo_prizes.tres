@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="PatternPrizeTable" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/Backend/Bingo/pattern_prize.gd" id="1_prize"]
+[ext_resource type="Script" path="res://scripts/Backend/Bingo/pattern_prize_table.gd" id="2_table"]
+
+[sub_resource type="Resource" id="Prize_coverall"]
+script = ExtResource("1_prize")
+pattern_id = "coverall"
+kind = 0
+cells = PackedInt32Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)
+payout_factor = 50
+
+[sub_resource type="Resource" id="Prize_letter_x"]
+script = ExtResource("1_prize")
+pattern_id = "letter x"
+kind = 0
+cells = PackedInt32Array(0, 4, 6, 8, 16, 18, 20, 24)
+payout_factor = 10
+
+[sub_resource type="Resource" id="Prize_corners"]
+script = ExtResource("1_prize")
+pattern_id = "four corners"
+kind = 0
+cells = PackedInt32Array(0, 4, 20, 24)
+payout_factor = 2
+
+[sub_resource type="Resource" id="Prize_any_line"]
+script = ExtResource("1_prize")
+pattern_id = "any line"
+kind = 1
+cells = PackedInt32Array()
+payout_factor = 2
+
+[sub_resource type="Resource" id="Prize_stamp"]
+script = ExtResource("1_prize")
+pattern_id = "postage stamp"
+kind = 0
+cells = PackedInt32Array(0, 1, 5, 6)
+payout_factor = 1
+
+[resource]
+script = ExtResource("2_table")
+prizes = [SubResource("Prize_coverall"), SubResource("Prize_letter_x"), SubResource("Prize_corners"), SubResource("Prize_any_line"), SubResource("Prize_stamp")]
+ball_budget = 39
