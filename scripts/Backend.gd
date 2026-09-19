@@ -10,6 +10,10 @@ const PRIZE_TABLE_PATH : String = "res://resources/bingo_prizes.tres"
 ## Clear this to run on the flat RNG stub instead of the bingo ball call server.
 @export var use_bingo_engine : bool = true
 
+## How long to wait for a ball call console to answer before giving up and running
+## the server in-process. The demo must never be broken by a missing peer.
+const CONSOLE_HANDSHAKE_TIMEOUT : float = 1.5
+
 # Who decides the prize.
 var outcome_source : OutcomeSource
 
@@ -26,6 +30,7 @@ var evaluator : CombinationEvaluator
 var mapper : OutcomeMapper
 
 var _pending : PlayResult
+var _peer_connected : bool = false
 
 
 func _ready():
@@ -43,6 +48,10 @@ func _ready():
 	$"../GameManager/PlayingState".connect("_playrequest", on_PlayRequest)
 	outcome_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
 	outcome_source.Start()
+	print("Ball call: %s" % outcome_source.Describe())
+
+	if transport is BroadcastTransport:
+		_WatchForConsole()
 
 	if "--selftest" in OS.get_cmdline_user_args():
 		RunSelfTest()
@@ -114,8 +123,37 @@ func _CreateOutcomeSource() -> void:
 	add_child(ball_server)
 	ball_server.Configure(prize_table)
 
+	# On the web the server normally lives in its own window alongside this one. The
+	# in-process server above stays built either way, as the fallback.
+	if OS.has_feature("web"):
+		transport = BroadcastTransport.new(Protocol.ROLE_CLIENT)
+		transport.connect("connection_changed", Callable(self, "_on_peer_connection_changed"))
+	else:
+		transport = LocalTransport.new(ball_server)
+
+	outcome_source = BingoOutcomeSource.new(transport, prize_table)
+
+
+func _on_peer_connection_changed(peer_connected : bool) -> void:
+	_peer_connected = peer_connected
+
+
+# If nothing answers on the channel, fall back to the in-process server so the game
+# still plays when it is embedded on its own.
+func _WatchForConsole() -> void:
+	await get_tree().create_timer(CONSOLE_HANDSHAKE_TIMEOUT).timeout
+	if _peer_connected:
+		return
+
+	push_warning("No ball call console answered in %.1fs; running the server in-process."
+		% CONSOLE_HANDSHAKE_TIMEOUT)
+
+	outcome_source.disconnect("outcome_ready", Callable(self, "_on_outcome_ready"))
 	transport = LocalTransport.new(ball_server)
 	outcome_source = BingoOutcomeSource.new(transport, prize_table)
+	outcome_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
+	outcome_source.Start()
+	print("Ball call fell back to: %s" % outcome_source.Describe())
 
 
 # The reels have to be able to SHOW every prize the source can award. If they can't,
