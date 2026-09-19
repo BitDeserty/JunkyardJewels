@@ -22,20 +22,27 @@ var target_position : int
 func _ready():
 	# Call the inherited _ready
 	super()
-	
+
 	# Connect the signals from the various states to be passed up to the ReelSet
 	$ReelHomingState.connect("_reel_homed", Callable(self, "on_reel_homed"))
 	$ReelSpinStartState.connect("_reel_started", Callable(self, "on_reel_started"))
 	$ReelSpinStopState.connect("_reel_stopped", Callable(self, "on_reel_stopped"))
-	
+
 func _process(_delta):
 	super(_delta)
 
+# target is a strip index (0..23); target_position is that index in pixels.
 func SetReelTarget(target : int):
+	target_symbol = target
 	target_position = $ReelStrip.CalculateStopPosition(target)
-	
+
 func GetReelTarget() -> int:
 	return target_position
+
+# Where the reel is actually sitting, as a strip index. After a stop this equals
+# target_symbol exactly -- the stop state lands on the commanded position.
+func GetReelStop() -> int:
+	return $ReelStrip.CurrentStopIndex()
 
 func GetCurrentState():
 	return self.current_state.to_string()

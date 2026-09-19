@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ReelStripData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Backend/reel_strip_data.gd" id="1_strip"]
+
+[resource]
+script = ExtResource("1_strip")
+symbols = PackedInt32Array(0, 1, 0, 4, 0, 3, 0, 5, 0, 2, 0, 6, 0, 1, 0, 4, 0, 5, 0, 3, 0, 2, 0, 1)
+payline_offset = 23
+payline_reversed = true
