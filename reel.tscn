@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://bi4gkg0jvuf40"]
+[gd_scene format=3 uid="uid://bi4gkg0jvuf40"]
 
 [ext_resource type="Texture2D" uid="uid://cgj2i3ecehiba" path="res://assets/symbols.png" id="1_fgkov"]
 [ext_resource type="Script" uid="uid://cujy7ctnfpark" path="res://scripts/ReelStateMachine/reelstatemachine.gd" id="1_y2lq7"]
@@ -13,34 +13,34 @@
 [ext_resource type="Script" uid="uid://cr6ioe8kx3acc" path="res://scripts/ReelStateMachine/reel_spin_seek_state.gd" id="10_ajtl2"]
 [ext_resource type="Script" uid="uid://bigusrx837f4k" path="res://scripts/ReelStateMachine/reel_spin_stop_state.gd" id="11_w60mv"]
 
-[node name="Reel" type="Node2D" node_paths=PackedStringArray("initial_state")]
+[node name="Reel" type="Node2D" unique_id=1268743248 node_paths=PackedStringArray("initial_state")]
 script = ExtResource("1_y2lq7")
 initial_state = NodePath("ReelHomingState")
 
-[node name="ReelStrip" type="Sprite2D" parent="."]
+[node name="ReelStrip" type="Sprite2D" parent="." unique_id=1064515720]
 texture_filter = 3
 texture_repeat = 2
 position = Vector2(0, -384)
 texture = ExtResource("1_fgkov")
 script = ExtResource("2_53643")
 
-[node name="ReelHomingState" type="Node" parent="."]
+[node name="ReelHomingState" type="Node" parent="." unique_id=149726924]
 script = ExtResource("7_y2lq7")
 home_curve = ExtResource("4_hdh5c")
 
-[node name="ReelIdleState" type="Node" parent="."]
+[node name="ReelIdleState" type="Node" parent="." unique_id=134839069]
 script = ExtResource("7_tcjkb")
 
-[node name="ReelSpinStartState" type="Node" parent="."]
+[node name="ReelSpinStartState" type="Node" parent="." unique_id=100411559]
 script = ExtResource("8_xouo5")
 start_curve = ExtResource("3_kfout")
 
-[node name="ReelSpinningState" type="Node" parent="."]
+[node name="ReelSpinningState" type="Node" parent="." unique_id=1273876385]
 script = ExtResource("9_f6lew")
 
-[node name="ReelSpinSeekState" type="Node" parent="."]
+[node name="ReelSpinSeekState" type="Node" parent="." unique_id=987813492]
 script = ExtResource("10_ajtl2")
 
-[node name="ReelSpinStopState" type="Node" parent="."]
+[node name="ReelSpinStopState" type="Node" parent="." unique_id=1361234966]
 script = ExtResource("11_w60mv")
 stop_curve = ExtResource("4_cta4m")

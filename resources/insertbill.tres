@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=6 format=3 uid="uid://cx2qo4t7grdfd"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cx2qo4t7grdfd"]
 
 [ext_resource type="Texture2D" uid="uid://c6cpxcdfjanjm" path="res://assets/insertmoney.png" id="1_dj8ek"]
 
@@ -33,7 +33,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_js786")
 }],
-"loop": true,
+"loop": 1,
 "name": &"billblink",
 "speed": 5.0
 }]
