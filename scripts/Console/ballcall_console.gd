@@ -24,6 +24,14 @@ const GRID_Y : int = 60
 const LOG_X : int = 214
 const COLUMN_LETTERS : String = "BINGO"
 
+# The flashboard: all 75 balls, one row per letter, fifteen to a row. Board index is
+# simply ball - 1, because B is 1-15, I is 16-30 and so on.
+const BOARD_X : int = 234
+const BOARD_Y : int = 58
+const BOARD_COLS : int = 15
+const BOARD_CELL_W : int = 25
+const BOARD_CELL_H : int = 22
+
 const COL_BG := Color(0.055, 0.063, 0.082)
 const COL_PANEL := Color(0.105, 0.121, 0.149)
 const COL_CELL := Color(0.145, 0.165, 0.200)
@@ -38,6 +46,9 @@ var prize_table : PatternPrizeTable
 
 var _cells : Array = []
 var _cell_text : Array = []
+var _board_cells : Array = []
+var _board_text : Array = []
+var _last_ball : int = 0
 var _card : PackedInt32Array = PackedInt32Array()
 var _log : RichTextLabel
 var _status : Label
@@ -102,12 +113,21 @@ func _Render(message : Dictionary) -> void:
 		Protocol.CARD_DEALT:
 			_card = PackedInt32Array(message.get("card", []))
 			_ShowCard()
+			_ClearBoard()
 			_Log("   card dealt", COL_DIM)
 		Protocol.BALL_CALLED:
 			var ball : int = int(message.get("ball", 0))
 			var index : int = int(message.get("index", -1))
 			_ball.text = str(ball)
 			_ball_caption.text = "column %s" % COLUMN_LETTERS[BingoCard.ColumnForBall(ball)]
+
+			# The ball that just came out stays highlighted until the next one, so the
+			# board reads like a real flashboard rather than a wall of lit numbers.
+			if _last_ball > 0:
+				_SetBoardCell(_last_ball, COL_DAUB, COL_TEXT)
+			_SetBoardCell(ball, COL_HIT, COL_BG)
+			_last_ball = ball
+
 			if index >= 0:
 				_SetCell(index, COL_DAUB)
 		Protocol.PATTERN_HIT:
@@ -137,6 +157,21 @@ func _ShowCard() -> void:
 func _SetCell(index : int, colour : Color) -> void:
 	if index >= 0 and index < _cells.size():
 		_cells[index].color = colour
+
+
+func _SetBoardCell(ball : int, fill : Color, text_colour : Color) -> void:
+	var i := ball - 1
+	if i < 0 or i >= _board_cells.size():
+		return
+	_board_cells[i].color = fill
+	_board_text[i].add_theme_color_override("font_color", text_colour)
+
+
+func _ClearBoard() -> void:
+	for i in _board_cells.size():
+		_board_cells[i].color = COL_CELL
+		_board_text[i].add_theme_color_override("font_color", COL_DIM)
+	_last_ball = 0
 
 
 # The winning cells aren't sent -- the console owns the same prize table, so it works
@@ -211,10 +246,29 @@ func _BuildUi() -> void:
 	_ball_caption = _AddLabel("", Rect2(14, 300, 170, 18), COL_DIM, 11)
 	_ball_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
-	_AddRect(Rect2(LOG_X - 8, 34, 418, 318), COL_PANEL)
+	_AddRect(Rect2(LOG_X - 8, 34, 418, 140), COL_PANEL)
+	_AddLabel("ball call", Rect2(LOG_X, 38, 200, 16), COL_DIM, 11)
+
+	for row in BingoCard.COLUMNS:
+		var letter := _AddLabel(COLUMN_LETTERS[row],
+			Rect2(LOG_X, BOARD_Y + row * BOARD_CELL_H, 16, BOARD_CELL_H - 2), COL_DIM, 11)
+		letter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		letter.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+		for col in BOARD_COLS:
+			var box := Rect2(BOARD_X + col * BOARD_CELL_W, BOARD_Y + row * BOARD_CELL_H,
+				BOARD_CELL_W - 2, BOARD_CELL_H - 2)
+			_board_cells.append(_AddRect(box, COL_CELL))
+
+			var number := _AddLabel(str(row * BOARD_COLS + col + 1), box, COL_DIM, 10)
+			number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			number.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			_board_text.append(number)
+
+	_AddRect(Rect2(LOG_X - 8, 180, 418, 172), COL_PANEL)
 	_log = RichTextLabel.new()
-	_log.position = Vector2(LOG_X, 42)
-	_log.size = Vector2(402, 302)
+	_log.position = Vector2(LOG_X, 188)
+	_log.size = Vector2(402, 156)
 	_log.scroll_following = true
 	_log.add_theme_font_size_override("normal_font_size", 11)
 	add_child(_log)
