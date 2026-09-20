@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="PaytableData" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="PaytableData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/Backend/pay_rule.gd" id="1_rule"]
 [ext_resource type="Script" path="res://scripts/Backend/paytable_data.gd" id="2_paytable"]
@@ -43,6 +43,22 @@ symbol = 0
 min_count = 0
 factor = 2
 
+[sub_resource type="Resource" id="Rule_any_bars"]
+script = ExtResource("1_rule")
+kind = 2
+pattern = PackedInt32Array(2, 3, 4)
+symbol = 0
+min_count = 0
+factor = 2
+
+[sub_resource type="Resource" id="Rule_cherry3"]
+script = ExtResource("1_rule")
+kind = 0
+pattern = PackedInt32Array(1, 1, 1)
+symbol = 0
+min_count = 0
+factor = 2
+
 [sub_resource type="Resource" id="Rule_cherries"]
 script = ExtResource("1_rule")
 kind = 1
@@ -53,4 +69,4 @@ factor = 1
 
 [resource]
 script = ExtResource("2_paytable")
-rules = [SubResource("Rule_cactus"), SubResource("Rule_seven"), SubResource("Rule_bar3"), SubResource("Rule_bar2"), SubResource("Rule_bar1"), SubResource("Rule_cherries")]
+rules = [SubResource("Rule_cactus"), SubResource("Rule_seven"), SubResource("Rule_bar3"), SubResource("Rule_bar2"), SubResource("Rule_bar1"), SubResource("Rule_any_bars"), SubResource("Rule_cherry3"), SubResource("Rule_cherries")]

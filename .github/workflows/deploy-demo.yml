@@ -1,0 +1,94 @@
+name: Deploy demo to Pages
+
+# Builds both web exports and publishes the two-app demo. The built output is never
+# committed -- roughly 38MB of engine would otherwise land in the repo's history on
+# every change.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue instead, and let a run in progress finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: 4.7.2
+  GODOT_RELEASE: stable
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot and export templates
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-${{ env.GODOT_RELEASE }}
+
+      - name: Install Godot and export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot/releases/download"
+          TAG="${GODOT_VERSION}-${GODOT_RELEASE}"
+          mkdir -p ~/godot
+
+          curl -fsSL -o /tmp/godot.zip \
+            "${BASE}/${TAG}/Godot_v${TAG}_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d ~/godot
+          mv ~/godot/Godot_v${TAG}_linux.x86_64 ~/godot/godot
+          chmod +x ~/godot/godot
+
+          curl -fsSL -o /tmp/templates.tpz \
+            "${BASE}/${TAG}/Godot_v${TAG}_export_templates.tpz"
+          unzip -q /tmp/templates.tpz -d /tmp/templates
+          mkdir -p ~/.local/share/godot/export_templates/"${GODOT_VERSION}.${GODOT_RELEASE}"
+          mv /tmp/templates/templates/* \
+            ~/.local/share/godot/export_templates/"${GODOT_VERSION}.${GODOT_RELEASE}"/
+
+      - name: Import project
+        # First run generates the .godot import cache. It exits non-zero on the
+        # editor-only git plugin, which has no web build and is not needed here.
+        run: ~/godot/godot --headless --import . || true
+
+      - name: Verify backend invariants
+        # The same self-test used locally: prize coverage, the mapper invariant, and
+        # the simulated bingo distribution. A broken paytable fails the deploy.
+        run: ~/godot/godot --headless --path . -- --selftest
+
+      - name: Export both builds
+        run: |
+          set -euo pipefail
+          mkdir -p build/client build/console
+          ~/godot/godot --headless --path . --export-release "Web" build/client/index.html
+          ~/godot/godot --headless --path . --export-release "Web Console" build/console/index.html
+
+      - name: Pack the shared-engine site
+        run: python3 tools/pack_demo_site.py build/client build/console site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -4,13 +4,15 @@ class_name PayRule
 extends Resource
 
 enum Kind {
-	LINE,  ## Every reel must match `pattern` position-for-position (Sym.ANY wildcards).
-	COUNT, ## `symbol` must appear on at least `min_count` reels, anywhere.
+	LINE,    ## Every reel must match `pattern` position-for-position (Sym.ANY wildcards).
+	COUNT,   ## `symbol` must appear on at least `min_count` reels, anywhere.
+	SET_ALL, ## Every reel shows some symbol from `pattern`, in any arrangement.
 }
 
 @export var kind : Kind = Kind.LINE
 
-## LINE only: one Sym value per reel, or Sym.ANY (-1) to accept anything.
+## LINE: one Sym value per reel, positionally, or Sym.ANY (-1) to accept anything.
+## SET_ALL: the allowed symbols, unordered -- position carries no meaning here.
 @export var pattern : PackedInt32Array = PackedInt32Array()
 
 ## COUNT only: which symbol to tally.
@@ -38,13 +40,25 @@ func Matches(line : PackedInt32Array) -> bool:
 				if s == symbol:
 					seen += 1
 			return seen >= min_count
+		Kind.SET_ALL:
+			# An empty set would otherwise match every possible line.
+			if pattern.is_empty():
+				return false
+			for s in line:
+				if not pattern.has(s):
+					return false
+			return true
 	return false
 
 
 func Describe() -> String:
 	if kind == Kind.COUNT:
 		return "%d+ %s pays %d" % [min_count, Sym.NameOf(symbol), factor]
+
 	var names : Array[String] = []
 	for s in pattern:
 		names.append(Sym.NameOf(s))
+
+	if kind == Kind.SET_ALL:
+		return "any 3 of %s pays %d" % [", ".join(names), factor]
 	return "%s pays %d" % [" / ".join(names), factor]
