@@ -19,6 +19,9 @@ func Enter():
 	# Listen for reels homed signal
 	$"../../ReelSet".connect("_reels_homed", Callable(self, "_on_reels_homed"))
 	
+	# Dim sits above the cabinet but below the splash, so the title and studio card
+	# are the only things at full brightness while the reels home.
+	$TitleDim.visible = true
 	$TitleSplash.visible = true
 	
 
@@ -46,9 +49,14 @@ func _on_reels_homed():
 func fade_out() -> void:
 	# Ensure the texture is visible and has a material to modify
 	if $TitleSplash:
-		# Start the fade animation using the tween
+		# Start the fade animation using the tween. The dim fades alongside the
+		# splash so the cabinet comes up to full brightness as the title leaves.
 		var tween = get_tree().create_tween()
+		tween.set_parallel(true)
 		tween.tween_property($TitleSplash, "modulate:a", 0.0, fade_duration)
-		
+		tween.tween_property($TitleDim, "modulate:a", 0.0, fade_duration)
+		tween.set_parallel(false)
+
 		# Set visible to false when the tween is done
 		tween.tween_callback(($TitleSplash.set_visible.bind(false)))
+		tween.tween_callback(($TitleDim.set_visible.bind(false)))
