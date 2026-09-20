@@ -268,7 +268,7 @@ frame_progress = 1.0
 [node name="BillInsertButton" type="TextureButton" parent="Buttons/BillInsert" unique_id=65850448]
 offset_left = 254.0
 offset_top = 250.0
-offset_right = 267.6992
+offset_right = 269.71378
 offset_bottom = 269.95862
 scale = Vector2(7.44569, 2.85591)
 
