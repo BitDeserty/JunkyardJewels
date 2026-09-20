@@ -14,6 +14,12 @@ const PRIZE_TABLE_PATH : String = "res://resources/bingo_prizes.tres"
 ## the server in-process. The demo must never be broken by a missing peer.
 const CONSOLE_HANDSHAKE_TIMEOUT : float = 1.5
 
+## How long a single spin waits on the console before resolving itself in-process.
+## Browsers throttle timers in hidden or off-screen frames, so a console scrolled out
+## of view can take far longer than its usual ~2s -- and a request that lands while
+## it is mid-game is dropped outright. Either way the spin must still finish.
+const SPIN_TIMEOUT : float = 6.0
+
 # Who decides the prize.
 var outcome_source : OutcomeSource
 
@@ -66,6 +72,20 @@ func on_PlayRequest(playdata : PlayResult):
 	_pending = playdata
 	print("Requesting an outcome from %s" % outcome_source.Describe())
 	outcome_source.RequestOutcome(playdata.bet_amount)
+
+	if outcome_source == _remote_source:
+		_WatchSpin(playdata)
+
+
+# A spin can never be left hanging on a peer that is slow, busy or gone.
+func _WatchSpin(playdata : PlayResult) -> void:
+	await get_tree().create_timer(SPIN_TIMEOUT).timeout
+	if _pending != playdata:
+		return
+
+	push_warning("Ball call console did not answer in %.1fs; resolving this spin in-process."
+		% SPIN_TIMEOUT)
+	_local_source.RequestOutcome(playdata.bet_amount)
 
 
 func _on_outcome_ready(outcome : Outcome):
@@ -124,6 +144,7 @@ func _CreateOutcomeSource() -> void:
 	ball_server.Configure(prize_table)
 
 	_local_source = BingoOutcomeSource.new(LocalTransport.new(ball_server), prize_table)
+	_local_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
 
 	if not OS.has_feature("web"):
 		outcome_source = _local_source
@@ -136,19 +157,14 @@ func _CreateOutcomeSource() -> void:
 	transport = BroadcastTransport.new(Protocol.ROLE_CLIENT)
 	transport.connect("connection_changed", Callable(self, "_on_peer_connection_changed"))
 	_remote_source = BingoOutcomeSource.new(transport, prize_table)
+	_remote_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
 	outcome_source = _remote_source
 
 
+# Both sources stay connected for the whole session; _pending decides whose answer
+# counts, so a late reply from the one that lost the race is simply ignored.
 func _UseSource(source : OutcomeSource) -> void:
-	var handler := Callable(self, "_on_outcome_ready")
-
-	if outcome_source != null and outcome_source != source 			and outcome_source.is_connected("outcome_ready", handler):
-		outcome_source.disconnect("outcome_ready", handler)
-
 	outcome_source = source
-	if not source.is_connected("outcome_ready", handler):
-		source.connect("outcome_ready", handler)
-
 	source.Start()
 	print("Ball call: %s" % source.Describe())
 
