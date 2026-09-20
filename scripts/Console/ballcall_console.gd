@@ -64,6 +64,10 @@ func _ready():
 		transport = BroadcastTransport.new(Protocol.ROLE_SERVER)
 		transport.connect("message_received", Callable(self, "_on_transport_message"))
 		transport.Start()
+
+		# Announced rather than waiting to be asked. Both builds are large and load
+		# independently, so whichever comes up second would otherwise never be heard.
+		transport.Send(Protocol.Hello("console", Protocol.ROLE_SERVER))
 		_SetStatus("listening, no client yet", COL_DIM)
 		_Log("ball call server ready, %d balls per game" % prize_table.ball_budget, COL_DIM)
 	else:

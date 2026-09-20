@@ -30,6 +30,8 @@ func Start() -> void:
 	if not OS.has_feature("web"):
 		push_error("BroadcastTransport only works in a web export.")
 		return
+	if _window != null:
+		return  # Idempotent: the channel is opened once and kept open.
 
 	_deliver = JavaScriptBridge.create_callback(Callable(self, "_on_js_message"))
 

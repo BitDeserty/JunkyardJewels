@@ -31,6 +31,8 @@ var mapper : OutcomeMapper
 
 var _pending : PlayResult
 var _peer_connected : bool = false
+var _local_source : OutcomeSource
+var _remote_source : OutcomeSource
 
 
 func _ready():
@@ -46,11 +48,9 @@ func _ready():
 
 	# Connect the game platform to the backend
 	$"../GameManager/PlayingState".connect("_playrequest", on_PlayRequest)
-	outcome_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
-	outcome_source.Start()
-	print("Ball call: %s" % outcome_source.Describe())
+	_UseSource(outcome_source)
 
-	if transport is BroadcastTransport:
+	if _remote_source != null:
 		_WatchForConsole()
 
 	if "--selftest" in OS.get_cmdline_user_args():
@@ -123,23 +123,52 @@ func _CreateOutcomeSource() -> void:
 	add_child(ball_server)
 	ball_server.Configure(prize_table)
 
-	# On the web the server normally lives in its own window alongside this one. The
-	# in-process server above stays built either way, as the fallback.
-	if OS.has_feature("web"):
-		transport = BroadcastTransport.new(Protocol.ROLE_CLIENT)
-		transport.connect("connection_changed", Callable(self, "_on_peer_connection_changed"))
-	else:
-		transport = LocalTransport.new(ball_server)
+	_local_source = BingoOutcomeSource.new(LocalTransport.new(ball_server), prize_table)
 
-	outcome_source = BingoOutcomeSource.new(transport, prize_table)
+	if not OS.has_feature("web"):
+		outcome_source = _local_source
+		return
+
+	# On the web the server normally lives in its own window. Both builds are tens of
+	# megabytes and load independently, so the channel stays open for the whole
+	# session instead of handshaking once -- whichever app comes up second would
+	# otherwise never be heard, and the pairing would fail about half the time.
+	transport = BroadcastTransport.new(Protocol.ROLE_CLIENT)
+	transport.connect("connection_changed", Callable(self, "_on_peer_connection_changed"))
+	_remote_source = BingoOutcomeSource.new(transport, prize_table)
+	outcome_source = _remote_source
 
 
+func _UseSource(source : OutcomeSource) -> void:
+	var handler := Callable(self, "_on_outcome_ready")
+
+	if outcome_source != null and outcome_source != source 			and outcome_source.is_connected("outcome_ready", handler):
+		outcome_source.disconnect("outcome_ready", handler)
+
+	outcome_source = source
+	if not source.is_connected("outcome_ready", handler):
+		source.connect("outcome_ready", handler)
+
+	source.Start()
+	print("Ball call: %s" % source.Describe())
+
+
+# A console can appear at any point -- it is a separate download in a separate frame.
+# Never swap mid-spin, or the outcome for the play in flight would be stranded.
 func _on_peer_connection_changed(peer_connected : bool) -> void:
 	_peer_connected = peer_connected
+	if not peer_connected or _remote_source == null:
+		return
+	if outcome_source == _remote_source or _pending != null:
+		return
+
+	print("Ball call console appeared; handing the game back to it.")
+	_UseSource(_remote_source)
 
 
-# If nothing answers on the channel, fall back to the in-process server so the game
-# still plays when it is embedded on its own.
+# If nothing answers on the channel, run the server in-process so the game still
+# plays when embedded on its own. The channel keeps listening, so a console that
+# loads later is still picked up.
 func _WatchForConsole() -> void:
 	await get_tree().create_timer(CONSOLE_HANDSHAKE_TIMEOUT).timeout
 	if _peer_connected:
@@ -147,13 +176,7 @@ func _WatchForConsole() -> void:
 
 	push_warning("No ball call console answered in %.1fs; running the server in-process."
 		% CONSOLE_HANDSHAKE_TIMEOUT)
-
-	outcome_source.disconnect("outcome_ready", Callable(self, "_on_outcome_ready"))
-	transport = LocalTransport.new(ball_server)
-	outcome_source = BingoOutcomeSource.new(transport, prize_table)
-	outcome_source.connect("outcome_ready", Callable(self, "_on_outcome_ready"))
-	outcome_source.Start()
-	print("Ball call fell back to: %s" % outcome_source.Describe())
+	_UseSource(_local_source)
 
 
 # The reels have to be able to SHOW every prize the source can award. If they can't,
