@@ -68,6 +68,32 @@ EMBED_PAGE = """<!DOCTYPE html>
 """
 
 
+# Injected into each shell. The engine sizes the canvas to the project resolution
+# divided by the device pixel ratio, which ignores the container completely: that is
+# 640x360 at dpr 1 so a desktop looks right by coincidence, but 213x120 inside a
+# 343px frame at dpr 3 -- a tiny game in a correctly sized space.
+#
+# Stretching the element to fill its frame while leaving the backing store at 640x360
+# means a phone GPU still only ever draws 640x360, and the pixel art upscales with
+# hard edges instead of being resampled at some non-integer ratio.
+#
+# !important is load-bearing, not decorative: the engine writes width and height
+# INLINE on the element at runtime, and an inline declaration beats a normal author
+# rule. An author !important declaration beats a normal inline one, which is exactly
+# the case this exists for. Without it the rule silently loses.
+#
+# This assumes the container is 16:9, which the embed page guarantees. Embedding
+# client.html directly at another aspect will stretch the cabinet.
+CANVAS_CSS = """<style>
+#canvas {
+	width: 100% !important;
+	height: 100% !important;
+	image-rendering: pixelated;
+}
+</style>
+</head>"""
+
+
 def patch_shell(html: str, pack_name: str) -> str:
     """Point this app's shell at the shared engine but its own pack."""
     match = re.search(r"const GODOT_CONFIG = (\{.*?\});", html, re.DOTALL)
@@ -86,7 +112,11 @@ def patch_shell(html: str, pack_name: str) -> str:
     if "index.pck" in sizes:
         sizes[pack_name] = sizes.pop("index.pck")
 
-    return html[: match.start()] + "const GODOT_CONFIG = %s;" % json.dumps(config) + html[match.end():]
+    html = html[: match.start()] + "const GODOT_CONFIG = %s;" % json.dumps(config) + html[match.end():]
+
+    if "</head>" not in html:
+        raise SystemExit("Exported shell has no </head> to attach the canvas rule to.")
+    return html.replace("</head>", CANVAS_CSS, 1)
 
 
 def main() -> None:

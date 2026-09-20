@@ -82,6 +82,8 @@ Export presets cannot override `run/main_scene`, so the console build is selecte
 
 `tools/pack_demo_site.py` combines the two exports into one site. Both `index.wasm` files are byte identical, and the loader resolves the pack as `mainPack || ${executable}.pck`, so both apps share one engine and differ only by a ~220KB pack — 79MB becomes 38MB and the browser caches the engine once across both frames.
 
+It also injects a `#canvas` rule into each shell. The engine sizes the canvas to **project resolution ÷ device pixel ratio**, which ignores the container entirely: 640x360 at dpr 1 so a desktop looks right by accident, but a tiny window at dpr 2 or 3. The rule stretches the element to fill its frame while leaving the backing store at 640x360, so a phone GPU still only draws 640x360 and the pixel art upscales with hard edges. **It needs `!important`** — the engine writes width and height *inline* at runtime, and only an author `!important` declaration beats a normal inline one. This assumes the container is 16:9, which the embed page guarantees.
+
 **`BroadcastChannel` is origin-scoped**, so both builds must be served from one origin; the embedding page's origin is irrelevant. Chrome also partitions channels by top-level site, so two iframes on one page work but an embedded client will not reach a console opened in its own tab.
 
 ### Reel strip and paytable data
@@ -137,7 +139,8 @@ Both counting meters expose `rolling` and `rollup_finished`. **Check `rolling` b
 
 Deferred, none blocking, roughly in order of how much they'll bite:
 
-- **Mobile canvas scaling** — on a phone the game renders into a tiny window inside a correctly sized parent. The embed's layout is right; the canvas is not filling it.
+- **Standalone exports still mis-scale.** The canvas-fill rule is injected by `tools/pack_demo_site.py`, so it only reaches the packed demo. A raw export opened on its own still sizes its canvas to project resolution ÷ device pixel ratio. The general fix is `html/custom_html_shell` on both presets, at the cost of maintaining a copy of Godot's shell across engine versions.
+- **Touch targets are small on a phone.** The bill insert button is 8x8 logical px, which is about 4x4 CSS px at phone scale — hittable but not comfortable. The spin button (80x48) is fine.
 - **Timer leak** — `ReelHomingState` and `ReelSpinStartState` each create a `Timer` child on every `Enter()` and never free it, so nodes accumulate one per spin. `ReelSpinStopState` creates one lazily instead; the other two still need the same fix.
 - **`BonusState` is an empty stub** and `bonus_amount` is never set, so the bonus branch in `playing_state.gd` stays commented out.
 - **CI annotations** — `actions/*` target the deprecated Node 20, and `ubuntu-latest` migrates to Ubuntu 26 in October 2026.
