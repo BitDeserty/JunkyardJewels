@@ -155,9 +155,17 @@ script = ExtResource("21_getpj")
 [node name="StartupState" type="Node" parent="GameManager"]
 script = ExtResource("23_1u8w0")
 
+[node name="TitleDim" type="ColorRect" parent="GameManager/StartupState"]
+visible = false
+z_index = 2
+mouse_filter = 2
+offset_right = 640.0
+offset_bottom = 400.0
+color = Color(0, 0, 0, 0.45)
+
 [node name="TitleSplash" type="TextureRect" parent="GameManager/StartupState"]
 visible = false
-z_index = 1
+z_index = 3
 texture_filter = 3
 offset_left = 209.0
 offset_top = 122.0
