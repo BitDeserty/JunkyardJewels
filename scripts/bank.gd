@@ -7,7 +7,7 @@ var winmeter : int = 0
 
 signal credits_incremented(balance : int)
 signal bet_incremented(betamt : int)
-signal win_incremented
+signal win_incremented(winamt : int)
 
 func GetCredits() -> int:
 	return balance
@@ -31,4 +31,9 @@ func IncrementBet():
 	
 func IncrementWin(amount : int):
 	winmeter += amount
+	emit_signal("win_incremented", winmeter)
+
+# Clears the win meter at the start of a new play.
+func ResetWin():
+	winmeter = 0
 	emit_signal("win_incremented", winmeter)
