@@ -7,6 +7,12 @@ name: Deploy demo to Pages
 on:
   push:
     branches: [main]
+    # Docs and art sources do not change the build, and a full run costs ten
+    # minutes of rebuilding the same two exports.
+    paths-ignore:
+      - '**.md'
+      - 'raw/**'
+      - '.gitignore'
   workflow_dispatch:
 
 permissions:
